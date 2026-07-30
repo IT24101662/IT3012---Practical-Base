@@ -25,6 +25,7 @@ class VisualGridHuntGame:
                 self.food_positions.add(pos_tuple)
 
         self.toxic_traps = set()
+        
 
         num_traps = 3
         while len(self.toxic_traps) < num_traps:
@@ -34,6 +35,7 @@ class VisualGridHuntGame:
 
             if trap_pos != (0, 0) and trap_pos not in self.walls and trap_pos not in self.food_positions:
                 self.toxic_traps.add(trap_pos)
+
 
         self.opponents = []
         while len(self.opponents) < num_opponents:
