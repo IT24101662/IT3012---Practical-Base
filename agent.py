@@ -58,6 +58,12 @@ class SearchAgent:
                     start, goal, width, height, walls
                 )
 
+            elif self.active_algo == 'AStar':
+                self.plan = self.astar_search(
+                    start, goal, walls, (width, height),
+                    heuristic_type='manhattan'
+                )
+
         if self.plan:
             return self.plan.pop(0)
 

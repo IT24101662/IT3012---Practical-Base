@@ -122,6 +122,7 @@ class GridGameGUI:
                                       custom_walls=walls)
 
         self.agent = SearchAgent()
+        self.agent.active_algo = 'AStar'
 
         max_canvas_dim = 600
         self.cell_size = max(20, min(max_canvas_dim // self.env.width, max_canvas_dim // self.env.height))
