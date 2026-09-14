@@ -1,6 +1,7 @@
 import random
 from collections import deque
 import heapq
+import math
 
 
 class GreedyGridAgent:
@@ -91,6 +92,24 @@ class SearchAgent:
 
         return neighbors
 
+    # Manhattan Distance Heuristic
+     
+    def manhattan_distance(self, pos, goal):
+        x1, y1 = pos
+        x2, y2 = goal
+
+        return abs(x1 - x2) + abs(y1 - y2)
+
+    
+    # Euclidean Distance Heuristic
+     
+    def euclidean_distance(self, pos, goal):
+        x1, y1 = pos
+        x2, y2 = goal
+
+        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+    
     # BFS - Breadth First Search
      
     def bfs_search(self, start, goal, width, height, walls):
@@ -199,3 +218,74 @@ class SearchAgent:
                     )
 
         return []
+
+    
+    # A* Search
+     
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+        width, height = grid_size
+
+        if heuristic_type == 'euclidean':
+            heuristic = self.euclidean_distance
+        else:
+            heuristic = self.manhattan_distance
+
+        frontier = []
+
+        # (f_cost, g_cost, counter, current_pos, path_taken)
+        counter = 0
+
+        g_start = 0
+        h_start = heuristic(start_pos, goal_pos)
+        f_start = g_start + h_start
+
+        heapq.heappush(
+            frontier,
+            (f_start, g_start, counter, start_pos, [])
+        )
+
+        reached_states = set()
+
+        while frontier:
+
+            f_cost, g_cost, _, current_pos, path_taken = heapq.heappop(frontier)
+
+            if current_pos == goal_pos:
+                return path_taken
+
+            if current_pos in reached_states:
+                continue
+
+            reached_states.add(current_pos)
+
+            for next_state, action in self.get_neighbors(
+                current_pos, width, height, walls
+            ):
+
+                if next_state not in reached_states:
+                    g_new = g_cost + 1
+                    h_new = heuristic(next_state, goal_pos)
+                    f_new = g_new + h_new
+
+                    counter += 1
+
+                    new_path = path_taken + [action]
+
+                    heapq.heappush(
+                        frontier,
+                        (
+                            f_new,
+                            g_new,
+                            counter,
+                            next_state,
+                            new_path
+                        )
+                    )
+
+        return []
+
+
+if __name__ == '__main__':
+    agent = SearchAgent()
+    print(agent.manhattan_distance((0, 0), (3, 4)))
+    print(agent.euclidean_distance((0, 0), (3, 4)))
