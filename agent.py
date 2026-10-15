@@ -2,6 +2,7 @@ import random
 from collections import deque
 import heapq
 import math
+from logic_engine import KnowledgeBase
 
 
 class GreedyGridAgent:
@@ -22,6 +23,9 @@ class SearchAgent:
         self.actions = ['Up', 'Down', 'Left', 'Right']
         self.plan = []
         self.active_algo = 'BFS'
+        self.kb = KnowledgeBase()
+        self.kb.tell_rule(['TargetVisible', 'HasDust'], 'SafeToEngage')
+        self.kb.tell_rule(['SafeToEngage', 'BloodseekerMissing'], 'Retreat')
 
     def sense_and_act(self, percept: dict) -> str:
         if not self.plan:
@@ -59,9 +63,14 @@ class SearchAgent:
                 )
 
             elif self.active_algo == 'AStar':
+                tile_facts = {
+                    (1, 0): ['TargetVisible', 'HasDust', 'BloodseekerMissing'],  # deduces Retreat: blocked
+                    (0, 1): ['TargetVisible', 'HasDust'],                        # SafeToEngage only: allowed
+                }
                 self.plan = self.astar_search(
                     start, goal, walls, (width, height),
-                    heuristic_type='manhattan'
+                    heuristic_type='manhattan',
+                    tile_facts=tile_facts
                 )
 
         if self.plan:
@@ -228,7 +237,10 @@ class SearchAgent:
     
     # A* Search
      
-    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan'):
+    def astar_search(self, start_pos, goal_pos, walls, grid_size, heuristic_type='manhattan', tile_facts=None):
+        if tile_facts is None:
+            tile_facts = {}
+
         width, height = grid_size
 
         if heuristic_type == 'euclidean':
@@ -267,6 +279,15 @@ class SearchAgent:
             for next_state, action in self.get_neighbors(
                 current_pos, width, height, walls
             ):
+                # Consult Knowledge Base for logical feasibility
+                self.kb.clear_facts()
+                for fact in tile_facts.get(next_state, []):
+                    self.kb.tell_fact(fact)
+                self.kb.forward_chain()
+
+                # If Retreat is deduced, tile is logically infeasible
+                if 'Retreat' in self.kb.facts:
+                    continue
 
                 if next_state not in reached_states:
                     g_new = g_cost + 1
